@@ -7,6 +7,9 @@
 
 #ifdef GLES2
 # include <SDL2/SDL_opengles2.h>
+# ifdef __EMSCRIPTEN__
+#  include "../Emscripten/EmscriptenGLShim.h"
+# endif
 #else
 # include <SDL2/SDL_opengl.h>
 static PFNGLGETSHADERIVPROC glGetShaderiv;
@@ -517,7 +520,11 @@ static void useGameProgram(BOOL gameProgram)
 
 static void createContext()
 {
+#ifdef __EMSCRIPTEN__
+	g_glCtx = EmGLWrapCreateContext(sdlWin);
+#else
 	g_glCtx = SDL_GL_CreateContext(sdlWin);
+#endif
 	if (!g_glCtx)
 	{
 		contextError = true;
@@ -599,7 +606,11 @@ static void createContext()
 #endif
 
 	if (vSync >= 0)
+#ifdef __EMSCRIPTEN__
+		EmGLSetSwapInterval(vSync);
+#else
 		SDL_GL_SetSwapInterval(vSync);
+#endif
 
 	glEnable(GL_SCISSOR_TEST);
 	glDisable(GL_DITHER);
@@ -635,7 +646,11 @@ static void destroyContext()
 	glDeleteShader(g_fShaderDisp);
 	glDeleteShader(g_vShaderDisp);
 
+#ifdef __EMSCRIPTEN__
+	EmGLWrapDeleteContext(g_glCtx);
+#else
 	SDL_GL_DeleteContext(g_glCtx);
+#endif
 	g_glCtx = NULL;
 
 	g_trianglesCount = 0;
@@ -855,7 +870,11 @@ REALIGN STDCALL void grBufferSwap(int swap_interval)
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+#ifdef __EMSCRIPTEN__
+	EmGLWrapSwapWindow(sdlWin);
+#else
 	SDL_GL_SwapWindow(sdlWin);
+#endif
 
 	if (needRecreateGl)
 	{

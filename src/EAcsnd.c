@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 
 #include "Wrapper.h"
+#ifdef __EMSCRIPTEN__
+#include "Emscripten/EmscriptenUtils.h"
+#endif
 
 extern BOOL linearSoundInterpolation;
 
@@ -109,7 +112,12 @@ REALIGN REGPARM uint32_t iSNDdirectstart_(uint32_t arg1, void *hWnd)
 		NULL
 	};
 	SDL_AudioSpec audioSpecOut;
+#ifdef __EMSCRIPTEN__
+	// Workarounds for https://github.com/emscripten-core/emscripten/issues/6009
+	audioDevice = EmInvokeToFunctionRunner5(&SDL_OpenAudioDevice, EM_FUNC_RETURN_TYPE_INT32, NULL, 0, &audioSpecIn, &audioSpecOut, SDL_AUDIO_ALLOW_SAMPLES_CHANGE);
+#else
 	audioDevice = SDL_OpenAudioDevice(NULL, 0, &audioSpecIn, &audioSpecOut, 0);
+#endif
 	if (!audioDevice)
 		buffer = (uint8_t *)malloc(256 * CHN_CNT * sizeof(int16_t));
 	else
@@ -131,7 +139,11 @@ REALIGN void iSNDdirectserve_(MAYBE_THIS_SINGLE)
 	{
 		if (!unPaused && audioDevice)
 		{
+#ifdef __EMSCRIPTEN__
+			EmInvokeToFunctionRunner2(&SDL_PauseAudioDevice, EM_FUNC_RETURN_TYPE_VOID, audioDevice, 0);
+#else
 			SDL_PauseAudioDevice(audioDevice, 0);
+#endif
 			unPaused = true;
 		}
 #ifdef NFS_CPP
@@ -148,7 +160,11 @@ REALIGN uint32_t iSNDdirectstop_(void)
 	canGetSamples = false;
 	if (audioDevice)
 	{
+#ifdef __EMSCRIPTEN__
+		EmInvokeToFunctionRunner1(&SDL_CloseAudioDevice, EM_FUNC_RETURN_TYPE_VOID, audioDevice);
+#else
 		SDL_CloseAudioDevice(audioDevice);
+#endif
 		unPaused = false;
 		audioDevice = 0;
 	}

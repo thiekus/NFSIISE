@@ -5,6 +5,103 @@
 extern uint16_t PORT1, PORT2;
 extern uint32_t broadcast;
 
+#ifdef __EMSCRIPTEN__
+
+REALIGN STDCALL uint32_t inet_addr_wrap(const char *cp)
+{
+	return -1;
+}
+REALIGN STDCALL int listen_wrap(int fd, int n)
+{
+	return -1;
+}
+REALIGN STDCALL char *inet_ntoa_wrap(struct in_addr in)
+{
+	return -1;
+}
+REALIGN STDCALL struct win_hostent *gethostbyname_wrap(const char *name)
+{
+	return NULL;
+}
+REALIGN STDCALL int gethostname_wrap(char *name, int namelen)
+{
+	return -1;
+}
+REALIGN STDCALL int connect_wrap(int sock, const struct sockaddr *name, int namelen)
+{
+	return -1;
+}
+REALIGN STDCALL int accept_wrap(int sock, struct sockaddr *addr, socklen_t *addrlen)
+{
+	return -1;
+}
+REALIGN STDCALL int WSAFDIsSet_wrap(int fd, struct win_fd_set *w_fds)
+{
+	return 0;
+}
+REALIGN STDCALL int select_wrap(int nfds, struct win_fd_set *readfds, struct win_fd_set *writefds, struct win_fd_set *exceptfds, struct timeval *timeout)
+{
+	return -1;
+}
+REALIGN STDCALL int send_wrap(int sock, const char *buf, socklen_t len, int flags)
+{
+	return -1;
+}
+REALIGN STDCALL int recv_wrap(int sock, char *buf, socklen_t len, int flags)
+{
+	return -1;
+}
+REALIGN STDCALL int getsockname_wrap(int sock, struct sockaddr *name, socklen_t *namelen)
+{
+	return -1;
+}
+REALIGN STDCALL int bind_wrap(int sock, const struct sockaddr *name, int namelen)
+{
+	return -1;
+}
+REALIGN STDCALL uint16_t htons_wrap(uint16_t hostshort)
+{
+	return -1;
+}
+REALIGN STDCALL int ioctlsocket_wrap(int sock, int32_t cmd, uint32_t *argp)
+{
+	return -1;
+}
+REALIGN STDCALL int setsockopt_wrap(int sock, int level, int optname, const char *optval, socklen_t optlen)
+{
+	return -1;
+}
+REALIGN STDCALL int WSAGetLastError_wrap(void)
+{
+	return 0;
+}
+REALIGN STDCALL int closesocket_wrap(int sock)
+{
+	return -1;
+}
+REALIGN STDCALL int socket_wrap(int af, int type, int protocol)
+{
+	return -1;
+}
+REALIGN STDCALL int WSACleanup_wrap(void)
+{
+	return 0;
+}
+REALIGN STDCALL int WSAStartup_wrap(uint16_t wVersionRequested, void *WSAData)
+{
+	return 0;
+}
+REALIGN STDCALL int sendto_wrap(int sock, const char *buf, socklen_t len, int flags, const struct sockaddr_ipx *to, socklen_t tolen)
+{
+	return -1;
+}
+REALIGN STDCALL int recvfrom_wrap(int sock, char *buf, socklen_t len, int flags, struct sockaddr_ipx *from, socklen_t *fromlen)
+{
+	return -1;
+}
+
+#else
+
 REALIGN STDCALL uint32_t inet_addr_wrap(const char *cp)
 {
 	return inet_addr(cp);
@@ -282,3 +379,5 @@ REALIGN STDCALL int recvfrom_wrap(int sock, char *buf, socklen_t len, int flags,
 	free(data);
 	return brecv;
 }
+
+#endif // __EMSCRIPTEN__

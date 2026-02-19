@@ -94,6 +94,31 @@ sudo apt install gcc-multilib
 * create symlink to unpacked `SDL2-*` directory into `src/Android/app/jni/SDL`,
 * run `./compile_nfs android` or `./compile_nfs android install`.
 
+#### Emscripten:
+
+* Make sure you install Emscripten EMSDK and activate EMSDK env (`source ./emsdk_env.sh` on Linux).
+* You need build SDL2 from source since prebuilt libraries from Emscripten lacks of pthread features. To clone and build run:
+
+  ```sh
+  # Clone repo and switch to SDL2
+  git clone https://github.com/libsdl-org/SDL.git
+  cd SDL
+  git checkout release-2.32.x
+
+  # Make build directory and enter
+  mkdir build
+  cd build
+
+  # Configure
+  emconfigure ../configure --prefix=$PWD/sdl-emscripten --host=wasm32-unknown-emscripten --enable-pthreads --disable-assembly --disable-cpuinfo CFLAGS="-sUSE_SDL=0 -O3 -pthread" LDFLAGS="-pthread"
+
+  # Build
+  emmake make -j4
+  emmake make install
+  ```
+* Copy `sdl-emscripten` folder that have built from `build` directory into this repo `emscripten` directory.
+* Run `./compile_nfs emscripten` to build as standalone with html page or `./compile_nfs emscripten modular` as independent Emscripten module for developers.
+
 ## Run:
 
 * Copy `fedata` and `gamedata` directories from the Need For Speed™ II SE original CD-ROM into `Need For Speed II SE` directory.
@@ -118,6 +143,27 @@ sudo apt install gcc-multilib
   * rename directory `Need For Speed II SE` to `Need For Speed II SE.pc`,
   * place directory `Need For Speed II SE.pc` into your Batocera Linux directory `/userdata/roms/windows/`,
   * to update the game list in Batocera using your controller, press `START` and go to `GAME SETTINGS` → `UPDATE GAMELISTS`, the game is listed under `Windows` section and will be successfully emulated via Wine
+* Emscripten build due to browser COOP and COEP security restrictions, must be run on HTTPS web server and cannot be hosted on plain HTTP web server. But self-signed certificate is usually sufficient to run locally. This repo contains preconfigured docker compose with caddy web server for ease of running.
+  * First, create `tls` directory inside `emscripten` directory and generate self-signed certificate using OpenSSL CLI:
+
+    ```sh
+    openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
+    ```
+  
+  * Compress `FEDATA` and `GAMEDATA` from Need For Speed II SE CD into `nfs2se.zip` and put on `emscripten/html` directory. Make sure both directories on root of zip directory structure and you didn't need to rename into lowercase (it will be automatically renamed on extract when running).
+  * Copy `nfs2se.conf.template` from `Need For Speed II SE` into `emscripten/html` and rename as `nfs2se.conf`. Edit config as your preferences.
+  * Enter `emscripten` directory on terminal and run webserver using `docker compose`
+
+    ```sh
+    docker compose up -d
+    ```
+
+  * By default, game would be hosted on `https://127.0.0.1:8080/nfs2se.html` and just ignore browwser self-signed certficate warnings.
+  * To stop server, on the `emscripten` directory run:
+
+    ```sh
+    docker compose down
+    ```
 
 ## What works:
 

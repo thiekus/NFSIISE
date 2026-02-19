@@ -6,7 +6,16 @@ Need For Speed II SE/*.dll
 Need For Speed II SE/*.exe
 Need For Speed II SE/*.so
 src/*.o
+src/*.tmp
 src/Android/.gradle
 src/Android/app/build
 src/Android/app/jni/SDL
 src/Android/app/src/main/AndroidManifest.xml
+emscripten/tls
+emscripten/caddy
+emscripten/sdl-emscripten
+emscripten/html/nfs2se.conf
+emscripten/html/nfs2se.js
+emscripten/html/nfs2se.wasm
+emscripten/html/nfs2se.zip
+emscripten/html/nfs2se.html

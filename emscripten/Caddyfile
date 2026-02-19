@@ -1,0 +1,12 @@
+
+:443 {
+    tls /etc/caddy/tls/server-cert.pem /etc/caddy/tls/server-key.pem
+    root * /usr/share/caddy
+    header {
+        Cross-Origin-Opener-Policy "same-origin"
+        Cross-Origin-Embedder-Policy "require-corp"
+        Access-Control-Allow-Origin "*"
+        Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    }
+	file_server
+}

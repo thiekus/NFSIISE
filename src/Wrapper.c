@@ -11,6 +11,10 @@
 	#include <sched.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include "Emscripten/EmscriptenUtils.h"
+#endif
+
 static const char title[] = "Need For Speed II SE";
 
 typedef void (*ProcedureType)(MAYBE_THIS_SINGLE);
@@ -158,6 +162,15 @@ static inline void mkdir_wrap(const char *path, uint32_t mode)
 #endif
 }
 
+static void showErrorMessageBox(const char *message)
+{
+#ifdef __EMSCRIPTEN__
+	EmInvokeToFunctionRunner4(&SDL_ShowSimpleMessageBox, EM_FUNC_RETURN_TYPE_INT32, SDL_MESSAGEBOX_ERROR, title, message, NULL);
+#else
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, message, NULL);
+#endif
+}
+
 static void checkGameDirs()
 {
 	struct stat st;
@@ -165,12 +178,11 @@ static void checkGameDirs()
 
 	if (stat("gamedata", &st) != 0 || !S_ISDIR(st.st_mode) || stat("fedata/pc", &st) != 0 || !S_ISDIR(st.st_mode))
 	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title,
+		showErrorMessageBox(
 			"Can't find \"gamedata\" and/or \"fedata\" directories!"
 #ifndef WIN32
 			"\nMake sure that all files and directories have small letters!"
 #endif
-			, NULL
 		);
 		exit(-1);
 	}
@@ -190,7 +202,7 @@ static void checkGameDirs()
 		{
 			char text[32];
 			snprintf(text, sizeof(text), "Missing %s file!", files[i]);
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, text, NULL);
+			showErrorMessageBox(text);
 			exit(-1);
 		}
 	}
@@ -220,7 +232,7 @@ static void signal_handler(int sig)
 #ifndef WIN32
 		SDL_SetWindowFullscreen(sdlWin, SDL_FALSE);
 #endif
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, "Can't create context!", NULL);
+		showErrorMessageBox("Can't create context!");
 	}
 #ifndef OPENGL1X
 	else if (shaderError)
@@ -228,14 +240,14 @@ static void signal_handler(int sig)
 #ifndef WIN32
 		SDL_SetWindowFullscreen(sdlWin, SDL_FALSE);
 #endif
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, "Error loading shaders, see console output!", NULL);
+		showErrorMessageBox("Error loading shaders, see console output!");
 	}
 	else if (framebufferError)
 	{
 #ifndef WIN32
 		SDL_SetWindowFullscreen(sdlWin, SDL_FALSE);
 #endif
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, "Can't create framebuffer!", NULL);
+		showErrorMessageBox("Can't create framebuffer!");
 	}
 #endif // OPENGL1X
 	else
@@ -317,7 +329,7 @@ void WrapperInit(void)
 #ifdef __ANDROID__
 	if (!SDL_AndroidRequestPermission("android.permission.READ_EXTERNAL_STORAGE"))
 	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, "No permissions to read the external storage.", NULL);
+		showErrorMessageBox("No permissions to read the external storage.");
 		exit(-1);
 	}
 	chdir("/sdcard/NFSIISE");
@@ -418,7 +430,7 @@ void WrapperInit(void)
 		f = fopen("nfs2se.conf", "r");
 	if (!f)
 	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, title, "Cannot open configuration file \"nfs2se.conf\"\n", NULL);
+		showErrorMessageBox("Cannot open configuration file \"nfs2se.conf\"\n");
 	}
 	else
 	{
@@ -631,7 +643,7 @@ REALIGN STDCALL SDL_Window *WrapperCreateWindow(WindowProc windowProc)
 		size_t bufferSize = strlen(error) + sizeof(errorText) - 2;
 		char *buffer = (char *)malloc(bufferSize);
 		snprintf(buffer, bufferSize, errorText, error);
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, buffer, NULL);
+		showErrorMessageBox(buffer);
 		free(buffer);
 		exit(-1);
 	}
@@ -674,8 +686,12 @@ REALIGN int32_t SDL_NumJoysticks_wrap(void)
 int main(int argc, char *argv[])
 {
 	void nfs2seEntrypoint();
+#ifdef __EMSCRIPTEN__
+	return EmInvokeGameEntryPoint(&nfs2seEntrypoint);
+#else
 	nfs2seEntrypoint();
 	return 0;
+#endif
 }
 #endif
 

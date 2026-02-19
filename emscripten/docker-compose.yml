@@ -1,0 +1,19 @@
+services:
+
+  nfs2se-server:
+    container_name: nfs2se-caddy
+    image: caddy:2.10
+    read_only: true
+    ports:
+      # - 127.0.0.1:8080:443
+      - 0.0.0.0:8080:443
+    volumes:
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./tls:/etc/caddy/tls:ro
+      # Actual www root, read only
+      - ./html:/usr/share/caddy:ro
+    tmpfs:
+      # To allow run at read-only mode
+      - /tmp
